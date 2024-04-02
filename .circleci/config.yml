@@ -3,7 +3,7 @@ jobs:
   build-and-test:
     working_directory: ~/project
     docker:
-      - image: cimg/node:17.4.0
+      - image: cimg/node:21.7.1
     steps:
       - checkout
       - run:
@@ -14,6 +14,7 @@ jobs:
       - run:
           name: Install Dependencies
           command: npm install
+      - run: npm install --save-dev firebase-tools
       - save_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
@@ -21,6 +22,15 @@ jobs:
       - run:
           name: Run test for the application
           command: npm run test:unit
+      - run:
+          name: Build application for production
+          command: npm run build
+      - run:
+          name: "Generate Service Account Authentication"
+          command: 'echo "$GOOGLE_APPLICATION_CREDENTIALS_BASE_64" | base64 --decode > $GOOGLE_APPLICATION_CREDENTIALS'
+      - run:
+          name: "Remove credentials file"
+          command: "rm $GOOGLE_APPLICATION_CREDENTIALS"
 workflows:
   build-and-test:
     jobs:
