@@ -3,22 +3,18 @@ jobs:
   build-and-test:
     working_directory: ~/project
     docker:
-      - image: cimg/node:21.7.1
+      - image: cimg/node:26.12
     steps:
       - checkout
-      - run:
-          name: Update NPM
-          command: "sudo npm install -g npm"
       - restore_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
       - run:
           name: Install Dependencies
-          command: npm install
-      - run: npm install --save-dev firebase-tools
+          command: npm ci
       - save_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
-            - ./node_modules
+            - ~/.npm
       - run:
           name: Run test for the application
           command: npm run test:unit
@@ -30,7 +26,7 @@ jobs:
           command: 'echo "$GOOGLE_APPLICATION_CREDENTIALS_BASE_64" | base64 --decode > $GOOGLE_APPLICATION_CREDENTIALS'
       - run:
           name: "Deploy app to Firebase Hosting"
-          command: "./node_modules/.bin/firebase deploy --non-interactive"
+          command: "npx firebase deploy --non-interactive"
       - run:
           name: "Remove credentials file"
           command: "rm $GOOGLE_APPLICATION_CREDENTIALS"
